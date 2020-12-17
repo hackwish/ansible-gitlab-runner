@@ -23,7 +23,7 @@
     url: https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-darwin-amd64
     dest: /usr/local/bin/gitlab-runner
     mode: '0755'
-  become: yes
+  become: true
   when: 
     - ansible_system == "Darwin"
     - not gitlab_runner_executable_exists.stat.exists or
