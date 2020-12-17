@@ -1,0 +1,40 @@
+---
+# tasks file for ansible-gitlab-runner
+#Download
+- name: Download gitlab-runner (Darwin64)
+  get_url:
+    url: https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-darwin-amd64
+    dest: /usr/local/bin/gitlab-runner
+    mode: '0755'
+  when: ansible_system == "Darwin"
+
+- name: Download gitlab-runner (Linux64)
+  get_url:
+    url: https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-linux-amd64
+    dest: /usr/local/bin/gitlab-runner
+    mode: '0755'
+  when: ansible_system == "Linux"
+
+#User permissions
+- name: Add "GitLab Runner user"
+  user:
+    name: gitlab-runner
+    comment: GitLab Runner
+    shell: /bin/bash
+    create_home: yes
+  when: ansible_system == "Linux"
+
+#Activate
+- name: Execute Install gitlab-runner service
+  shell: gitlab-runner install
+  when: ansible_system == "Darwin"
+
+- name: Execute Install gitlab-runner service
+  shell: gitlab-runner install --user=gitlab-runner --working-directory=/home/gitlab-runner
+  when: ansible_system == "Linux"
+
+#Run
+- name: Execute Install gitlab-runner service
+  shell: gitlab-runner start
+
+#Register
