@@ -1,5 +1,22 @@
 ---
 # tasks file for ansible-gitlab-runner
+# Check exists
+- name: check gitlab-runner executable exists
+  stat:
+    path: "/usr/local/bin/gitlab-runner"
+  register: gitlab_runner_executable_exists
+  tags: gitlab_runner
+  changed_when: False
+  failed_when: False
+
+- name: Check gitlab-runner exists
+  command: gitlab-runner -v
+  register: gitlab_runner_exists
+  when: "gitlab_runner_executable_exists.stat.exists"
+  changed_when: False
+  failed_when: False
+  tags: gitlab_runner
+
 #Download
 - name: Download gitlab-runner (Darwin64)
   get_url:
@@ -7,14 +24,24 @@
     dest: /usr/local/bin/gitlab-runner
     mode: '0755'
   become: yes
-  when: ansible_system == "Darwin"
+  when: 
+    - ansible_system == "Darwin"
+    - not gitlab_runner_executable_exists.stat.exists or
+      gitlab_runner_exists.stdout.find('Version') != -1
+  tags: gitlab_runner
+  register: gitlab_runner_download
 
 - name: Download gitlab-runner (Linux64)
   get_url:
     url: https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-linux-amd64
     dest: /usr/local/bin/gitlab-runner
     mode: '0755'
-  when: ansible_system == "Linux"
+  when:
+    - ansible_system == "Linux"
+    - not gitlab_runner_executable_exists.stat.exists or
+      gitlab_runner_exists.stdout.find('Version') != -1
+  tags: gitlab_runner
+  register: gitlab_runner_download
 
 #User permissions
 - name: Add "GitLab Runner user"
@@ -24,18 +51,22 @@
     shell: /bin/bash
     create_home: yes
   when: ansible_system == "Linux"
+  tags: gitlab_runner
 
 #Activate
 - name: Execute Install gitlab-runner service
   shell: gitlab-runner install
   when: ansible_system == "Darwin"
-
+  tags: gitlab_runner
+  
 - name: Execute Install gitlab-runner service
   shell: gitlab-runner install --user=gitlab-runner --working-directory=/home/gitlab-runner
   when: ansible_system == "Linux"
+  tags: gitlab_runner
 
 #Run
 - name: Execute Install gitlab-runner service
   shell: gitlab-runner start
+  tags: gitlab_runner
 
 #Register
