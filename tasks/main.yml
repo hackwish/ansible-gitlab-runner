@@ -58,16 +58,16 @@
   shell: gitlab-runner install
   when: 
     - ansible_system == "Darwin"
-    - gitlab_runner_exists.stdout.find('Version') == -1
   tags: gitlab_runner
+  ignore_errors: true
   
 - name: Execute Install gitlab-runner service
   shell: gitlab-runner install --user=gitlab-runner --working-directory=/home/gitlab-runner
   when: 
     - ansible_system == "Linux"
-    - gitlab_runner_exists.stdout.find('Version') == -1
   tags: gitlab_runner
-
+  ignore_errors: true
+  
 #Run
 - name: Execute Install gitlab-runner service
   shell: gitlab-runner start
